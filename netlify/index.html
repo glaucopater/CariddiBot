@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CariddiBot</title>
+  <meta name="description" content="Telegram connector bot deployed on Netlify" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0; padding: 2rem;
+      display: grid; place-items: center; min-height: 100vh;
+      background: Canvas; color: CanvasText;
+    }
+    main { max-width: 520px; text-align: center; }
+    h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+    p { margin: 0.5rem 0; opacity: 0.85; }
+    .status {
+      margin-top: 1.5rem; padding: 0.75rem 1rem; border-radius: 8px;
+      background: color-mix(in oklab, CanvasText 8%, Canvas);
+      font-size: 0.9rem;
+    }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CariddiBot</h1>
+    <p>Telegram connector bot deployed on Netlify.</p>
+    <p>Webhook endpoint: <code>/.netlify/functions/telegram-webhook</code></p>
+    <div class="status">
+      Status: <strong>online</strong> ✅
+    </div>
+    <p style="margin-top:1.5rem; font-size:0.85rem">
+      Source: <a href="https://github.com/glaucopater/CariddiBot" target="_blank" rel="noopener">github.com/glaucopater/CariddiBot</a>
+    </p>
+  </main>
+</body>
+</html>

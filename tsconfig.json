@@ -7,7 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"]
+    "types": ["node", "vitest"]
   },
   "exclude": ["node_modules", "dist"]
 }
