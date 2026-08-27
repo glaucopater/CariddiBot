@@ -2,20 +2,17 @@ import type { Handler, HandlerContext, HandlerEvent } from '@netlify/functions';
 import { Telegraf } from 'telegraf';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
+const bot = botToken ? new Telegraf(botToken) : null;
 
-if (!botToken) {
-  throw new Error('TELEGRAM_BOT_TOKEN is required');
+if (bot) {
+  bot.start(async (ctx) => {
+    await ctx.reply('Hello! CariddiBot is online. Send me a message to test the webhook.');
+  });
+
+  bot.on('text', async (ctx) => {
+    await ctx.reply(`Received: ${ctx.message.text}`);
+  });
 }
-
-const bot = new Telegraf(botToken);
-
-bot.start(async (ctx) => {
-  await ctx.reply('Hello! CariddiBot is online. Send me a message to test the webhook.');
-});
-
-bot.on('text', async (ctx) => {
-  await ctx.reply(`Received: ${ctx.message.text}`);
-});
 
 const handler: Handler = async (
   event: HandlerEvent,
@@ -25,6 +22,14 @@ const handler: Handler = async (
     return {
       statusCode: 405,
       body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
+
+  if (!bot) {
+    console.error('TELEGRAM_BOT_TOKEN is not configured');
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Bot configuration is missing' }),
     };
   }
 
