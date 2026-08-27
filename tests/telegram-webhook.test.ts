@@ -1,7 +1,7 @@
 /**
  * Unit tests for the Telegram Webhook Netlify Function.
  *
- * Strategy: mock the `telegraf` module so that `new Bot(...)` returns
+ * Strategy: mock the `telegraf` module so that `new Telegraf(...)` returns
  * a controllable spy, then exercise the real handler logic.
  */
 
@@ -13,7 +13,7 @@ import type { HandlerEvent, HandlerResponse } from "@netlify/functions";
 const mockHandleUpdate = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("telegraf", () => ({
-  Bot: vi.fn().mockImplementation(() => ({
+  Telegraf: vi.fn().mockImplementation(() => ({
     handleUpdate: mockHandleUpdate,
   })),
 }));
