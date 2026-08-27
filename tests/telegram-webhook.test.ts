@@ -10,13 +10,16 @@ import { handler } from "../netlify/functions/telegram-webhook";
 import type { HandlerEvent, HandlerResponse } from "@netlify/functions";
 
 // ── Mock telegraf BEFORE importing the handler ──────────────
-let mockHandleUpdate: ReturnType<typeof vi.fn>;
+const mocks = vi.hoisted(() => {
+  return {
+    mockHandleUpdate: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 vi.mock("telegraf", () => {
-  mockHandleUpdate = vi.fn().mockResolvedValue(undefined);
   return {
     Telegraf: vi.fn().mockImplementation(() => ({
-      handleUpdate: mockHandleUpdate,
+      handleUpdate: mocks.mockHandleUpdate,
     })),
   };
 });
@@ -74,7 +77,7 @@ describe("telegramWebhook handler", () => {
 
     expect(res.statusCode).toBe(405);
     expect(res.body).toContain("Method not allowed");
-    expect(mockHandleUpdate).not.toHaveBeenCalled();
+    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
   });
 
   // 2 ─ Security: wrong token ─────────────────────────────────
@@ -87,7 +90,7 @@ describe("telegramWebhook handler", () => {
 
     expect(res.statusCode).toBe(401);
     expect(res.body).toContain("Unauthorized");
-    expect(mockHandleUpdate).not.toHaveBeenCalled();
+    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
     expect(consoleWarnSpy).toHaveBeenCalledWith("Invalid secret token received");
   });
 
@@ -98,7 +101,7 @@ describe("telegramWebhook handler", () => {
     )) as HandlerResponse;
 
     expect(res.statusCode).toBe(401);
-    expect(mockHandleUpdate).not.toHaveBeenCalled();
+    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
   });
 
   // 4 ─ Happy path ────────────────────────────────────────────
@@ -110,8 +113,8 @@ describe("telegramWebhook handler", () => {
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body as string)).toEqual({ received: true });
-    expect(mockHandleUpdate).toHaveBeenCalledTimes(1);
-    expect(mockHandleUpdate).toHaveBeenCalledWith(expectedUpdate);
+    expect(mocks.mockHandleUpdate).toHaveBeenCalledTimes(1);
+    expect(mocks.mockHandleUpdate).toHaveBeenCalledWith(expectedUpdate);
   });
 
   // 5 ─ Base64-encoded body (Netlify may send base64) ─────────
@@ -124,7 +127,7 @@ describe("telegramWebhook handler", () => {
     )) as HandlerResponse;
 
     expect(res.statusCode).toBe(200);
-    expect(mockHandleUpdate).toHaveBeenCalledWith(rawUpdate);
+    expect(mocks.mockHandleUpdate).toHaveBeenCalledWith(rawUpdate);
   });
 
   // 6 ─ Bad JSON body ─────────────────────────────────────────
@@ -136,7 +139,7 @@ describe("telegramWebhook handler", () => {
     expect(res.statusCode).toBe(500);
     expect(res.body).toContain("Internal server error");
     expect(consoleErrorSpy).toHaveBeenCalled();
-    expect(mockHandleUpdate).not.toHaveBeenCalled();
+    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
   });
 
   // 7 ─ Empty body ────────────────────────────────────────────
