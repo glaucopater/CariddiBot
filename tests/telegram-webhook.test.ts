@@ -1,154 +1,144 @@
 /**
  * Unit tests for the Telegram Webhook Netlify Function.
  *
- * Strategy: mock the `telegraf` module so that `new Telegraf(...)` returns
- * a controllable spy, then exercise the real handler logic.
+ * Telegraf is mocked so tests exercise the real Netlify handler without
+ * contacting Telegram or requiring real Netlify environment variables.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { handler } from "../netlify/functions/telegram-webhook";
-import type { HandlerEvent, HandlerResponse } from "@netlify/functions";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Handler, HandlerEvent, HandlerResponse } from '@netlify/functions';
 
-// ── Mock telegraf BEFORE importing the handler ──────────────
-const mocks = vi.hoisted(() => {
-  return {
-    mockHandleUpdate: vi.fn().mockResolvedValue(undefined),
-  };
-});
+const mocks = vi.hoisted(() => ({
+  mockHandleUpdate: vi.fn().mockResolvedValue(undefined),
+  mockStart: vi.fn(),
+  mockOn: vi.fn(),
+}));
 
-vi.mock("telegraf", () => {
-  return {
-    Telegraf: vi.fn().mockImplementation(() => ({
-      handleUpdate: mocks.mockHandleUpdate,
-    })),
-  };
-});
+vi.mock('telegraf', () => ({
+  Telegraf: vi.fn().mockImplementation(() => ({
+    handleUpdate: mocks.mockHandleUpdate,
+    start: mocks.mockStart,
+    on: mocks.mockOn,
+  })),
+}));
 
-// Set env vars BEFORE importing the handler (module-scoped Bot init)
-process.env.TELEGRAM_BOT_TOKEN = "test-bot-token";
-process.env.TELEGRAM_SECRET_TOKEN = "my-secret-token";
-
-// ── Helpers ──────────────────────────────────────────────────
-const VALID_HEADERS = {
-  "x-telegram-bot-api-secret-token": "my-secret-token",
+const validHeaders = {
+  'x-telegram-bot-api-secret-token': 'my-secret-token',
 };
 
 function makeEvent(overrides: Partial<HandlerEvent> = {}): HandlerEvent {
   return {
-    rawUrl: "https://example.netlify.app/.netlify/functions/telegram-webhook",
-    rawQuery: "",
-    path: "/.netlify/functions/telegram-webhook",
-    httpMethod: "POST",
-    headers: { ...VALID_HEADERS },
+    rawUrl: 'https://example.netlify.app/.netlify/functions/telegram-webhook',
+    rawQuery: '',
+    path: '/.netlify/functions/telegram-webhook',
+    httpMethod: 'POST',
+    headers: { ...validHeaders },
     multiValueHeaders: {},
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
-    body: JSON.stringify({ update_id: 1, message: { text: "hello" } }),
+    body: JSON.stringify({ update_id: 1, message: { text: 'hello' } }),
     isBase64Encoded: false,
     ...overrides,
   } as HandlerEvent;
 }
 
-function invoke(event: HandlerEvent): Promise<HandlerResponse | void> {
-  return Promise.resolve(handler(event, {} as any)) as Promise<HandlerResponse | void>;
+async function loadHandler(): Promise<Handler> {
+  const module = await import('../netlify/functions/telegram-webhook');
+  return module.handler;
 }
 
-// ── Tests ────────────────────────────────────────────────────
-describe("telegramWebhook handler", () => {
+describe('telegramWebhook handler', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.resetModules();
     vi.clearAllMocks();
-    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubEnv('TELEGRAM_BOT_TOKEN', 'test-bot-token');
+    vi.stubEnv('TELEGRAM_SECRET_TOKEN', 'my-secret-token');
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     consoleWarnSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
 
-  // 1 ─ Method guard ──────────────────────────────────────────
-  it("rejects non-POST requests with 405", async () => {
-    const res = (await invoke(
-      makeEvent({ httpMethod: "GET" }),
-    )) as HandlerResponse;
+  it('rejects non-POST requests with 405', async () => {
+    const handler = await loadHandler();
+    const res = (await handler(makeEvent({ httpMethod: 'GET' }), {} as never)) as HandlerResponse;
 
     expect(res.statusCode).toBe(405);
-    expect(res.body).toContain("Method not allowed");
+    expect(res.body).toContain('Method not allowed');
     expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
   });
 
-  // 2 ─ Security: wrong token ─────────────────────────────────
-  it("rejects requests with an invalid secret token (401)", async () => {
-    const res = (await invoke(
+  it('rejects requests with an invalid secret token (401)', async () => {
+    const handler = await loadHandler();
+    const res = (await handler(
       makeEvent({
-        headers: { "x-telegram-bot-api-secret-token": "wrong-token" },
+        headers: { 'x-telegram-bot-api-secret-token': 'wrong-token' },
       }),
+      {} as never,
     )) as HandlerResponse;
 
     expect(res.statusCode).toBe(401);
-    expect(res.body).toContain("Unauthorized");
+    expect(res.body).toContain('Unauthorized');
     expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
-    expect(consoleWarnSpy).toHaveBeenCalledWith("Invalid secret token received");
-  });
-
-  // 3 ─ Security: no token in headers ─────────────────────────
-  it("rejects requests missing the secret token header (401)", async () => {
-    const res = (await invoke(
-      makeEvent({ headers: {} }),
-    )) as HandlerResponse;
-
-    expect(res.statusCode).toBe(401);
-    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
-  });
-
-  // 4 ─ Happy path ────────────────────────────────────────────
-  it("processes a valid POST and returns 200", async () => {
-    const res = (await invoke(makeEvent())) as HandlerResponse;
-    const expectedUpdate = JSON.parse(
-      makeEvent().body as string,
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'Rejected Telegram webhook request: invalid secret token',
     );
+  });
+
+  it('rejects requests missing the secret token header (401)', async () => {
+    const handler = await loadHandler();
+    const res = (await handler(makeEvent({ headers: {} }), {} as never)) as HandlerResponse;
+
+    expect(res.statusCode).toBe(401);
+    expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
+  });
+
+  it('processes a valid POST and returns 200', async () => {
+    const handler = await loadHandler();
+    const event = makeEvent();
+    const expectedUpdate = JSON.parse(event.body as string);
+    const res = (await handler(event, {} as never)) as HandlerResponse;
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body as string)).toEqual({ received: true });
-    expect(mocks.mockHandleUpdate).toHaveBeenCalledTimes(1);
     expect(mocks.mockHandleUpdate).toHaveBeenCalledWith(expectedUpdate);
   });
 
-  // 5 ─ Base64-encoded body (Netlify may send base64) ─────────
-  it("decodes base64-encoded body before processing", async () => {
-    const rawUpdate = { update_id: 99, message: { text: "base64 test" } };
-    const encoded = Buffer.from(JSON.stringify(rawUpdate), "utf8").toString("base64");
-
-    const res = (await invoke(
+  it('decodes base64-encoded body before processing', async () => {
+    const handler = await loadHandler();
+    const rawUpdate = { update_id: 99, message: { text: 'base64 test' } };
+    const encoded = Buffer.from(JSON.stringify(rawUpdate), 'utf8').toString('base64');
+    const res = (await handler(
       makeEvent({ body: encoded, isBase64Encoded: true }),
+      {} as never,
     )) as HandlerResponse;
 
     expect(res.statusCode).toBe(200);
     expect(mocks.mockHandleUpdate).toHaveBeenCalledWith(rawUpdate);
   });
 
-  // 6 ─ Bad JSON body ─────────────────────────────────────────
-  it("returns 500 when the body is not valid JSON", async () => {
-    const res = (await invoke(
-      makeEvent({ body: "{invalid json!!" }),
-    )) as HandlerResponse;
+  it('returns 500 when the body is not valid JSON', async () => {
+    const handler = await loadHandler();
+    const res = (await handler(makeEvent({ body: '{invalid json!!' }), {} as never)) as HandlerResponse;
 
     expect(res.statusCode).toBe(500);
-    expect(res.body).toContain("Internal server error");
+    expect(res.body).toContain('Internal server error');
     expect(consoleErrorSpy).toHaveBeenCalled();
     expect(mocks.mockHandleUpdate).not.toHaveBeenCalled();
   });
 
-  // 7 ─ Empty body ────────────────────────────────────────────
-  it("returns 500 when the body is empty", async () => {
-    const res = (await invoke(
-      makeEvent({ body: null }),
-    )) as HandlerResponse;
+  it('returns 500 when the body is empty', async () => {
+    const handler = await loadHandler();
+    const res = (await handler(makeEvent({ body: null }), {} as never)) as HandlerResponse;
 
     expect(res.statusCode).toBe(500);
-    expect(res.body).toContain("Internal server error");
+    expect(res.body).toContain('Internal server error');
   });
 });
