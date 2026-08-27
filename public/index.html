@@ -1,41 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CariddiBot</title>
-  <meta name="description" content="Telegram connector bot deployed on Netlify" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CariddiBot v1.0.1</title>
   <style>
-    :root { color-scheme: light dark; }
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0; padding: 2rem;
-      display: grid; place-items: center; min-height: 100vh;
-      background: Canvas; color: CanvasText;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.6;
     }
-    main { max-width: 520px; text-align: center; }
-    h1 { margin: 0 0 0.5rem; font-size: 2rem; }
-    p { margin: 0.5rem 0; opacity: 0.85; }
-    .status {
-      margin-top: 1.5rem; padding: 0.75rem 1rem; border-radius: 8px;
-      background: color-mix(in oklab, CanvasText 8%, Canvas);
-      font-size: 0.9rem;
+    h1 { color: #0088cc; }
+    .status { 
+      padding: 1rem;
+      background: #f0f0f0;
+      border-radius: 8px;
+      margin: 1rem 0;
     }
-    a { color: #3b82f6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <main>
-    <h1>CariddiBot</h1>
-    <p>Telegram connector bot deployed on Netlify.</p>
-    <p>Webhook endpoint: <code>/.netlify/functions/telegram-webhook</code></p>
-    <div class="status">
-      Status: <strong>online</strong> ✅
-    </div>
-    <p style="margin-top:1.5rem; font-size:0.85rem">
-      Source: <a href="https://github.com/glaucopater/CariddiBot" target="_blank" rel="noopener">github.com/glaucopater/CariddiBot</a>
-    </p>
-  </main>
+  <h1>CariddiBot v1.0.1</h1>
+  <div class="status">
+    <p><strong>Status:</strong> Online</p>
+    <p><strong>Version:</strong> 1.0.1</p>
+  </div>
+  <p>A Telegram bot integration deployed on Netlify Functions.</p>
 </body>
 </html>
