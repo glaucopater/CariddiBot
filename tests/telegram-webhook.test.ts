@@ -10,13 +10,16 @@ import { handler } from "../netlify/functions/telegram-webhook";
 import type { HandlerEvent, HandlerResponse } from "@netlify/functions";
 
 // ── Mock telegraf BEFORE importing the handler ──────────────
-const mockHandleUpdate = vi.fn().mockResolvedValue(undefined);
+let mockHandleUpdate: ReturnType<typeof vi.fn>;
 
-vi.mock("telegraf", () => ({
-  Telegraf: vi.fn().mockImplementation(() => ({
-    handleUpdate: mockHandleUpdate,
-  })),
-}));
+vi.mock("telegraf", () => {
+  mockHandleUpdate = vi.fn().mockResolvedValue(undefined);
+  return {
+    Telegraf: vi.fn().mockImplementation(() => ({
+      handleUpdate: mockHandleUpdate,
+    })),
+  };
+});
 
 // Set env vars BEFORE importing the handler (module-scoped Bot init)
 process.env.TELEGRAM_BOT_TOKEN = "test-bot-token";
