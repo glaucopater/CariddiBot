@@ -1,9 +1,11 @@
 {
-  "name": "telegram-connector",
-  "version": "1.0.0",
+  "name": "cariddibot",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
+    "dev": "netlify dev",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
@@ -20,8 +22,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@netlify/functions": "^2.8.0",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@netlify/functions": "^6.0.0",
