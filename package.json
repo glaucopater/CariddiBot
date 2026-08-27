@@ -2,10 +2,9 @@
   "name": "cariddibot",
   "version": "1.0.1",
   "description": "",
-  "main": "dist/index.js",
-  "type": "module",
+  "main": "dist/index.js", 
   "scripts": {
-    "dev": "netlify dev",
+    "netlify-dev": "netlify dev",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",

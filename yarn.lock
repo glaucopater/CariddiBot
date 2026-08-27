@@ -1045,6 +1045,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cariddibot@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "cariddibot@workspace:."
+  dependencies:
+    "@netlify/functions": "npm:^6.0.0"
+    "@types/express": "npm:^4.17.21"
+    "@types/node": "npm:^20.12.12"
+    "@vitest/coverage-v8": "npm:^3.2.4"
+    dotenv: "npm:^16.4.5"
+    express: "npm:^4.19.2"
+    telegraf: "npm:^4.16.3"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.4.5"
+    vitest: "npm:^3.2.4"
+  languageName: unknown
+  linkType: soft
+
 "chai@npm:^5.2.0":
   version: 5.3.3
   resolution: "chai@npm:5.3.3"
@@ -2476,23 +2493,6 @@ __metadata:
   checksum: 10c0/58931c0cfb00481a99faf757cff3421f9ffb25a4f26c6d34150bc3a0a6e30a98860d7ff824f785f0155c9772fff478fc4a8d22ed975e48014f5037e727f2c995
   languageName: node
   linkType: hard
-
-"telegram-connector@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "telegram-connector@workspace:."
-  dependencies:
-    "@netlify/functions": "npm:^6.0.0"
-    "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:^20.12.12"
-    "@vitest/coverage-v8": "npm:^3.2.4"
-    dotenv: "npm:^16.4.5"
-    express: "npm:^4.19.2"
-    telegraf: "npm:^4.16.3"
-    ts-node: "npm:^10.9.2"
-    typescript: "npm:^5.4.5"
-    vitest: "npm:^3.2.4"
-  languageName: unknown
-  linkType: soft
 
 "test-exclude@npm:^7.0.1":
   version: 7.0.2
